@@ -24,12 +24,38 @@ import java.util.Date;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+/**
+ * ====================================================================================
+ * SERVICE: JWTService
+ * ====================================================================================
+ *
+ * <h2>FUNCTIONALITY</h2>
+ * Utility service for generating, parsing, validating, and resolving JSON Web Tokens (JWTs) using HMAC-SHA256 signing algorithms.
+ *
+ * <h2>WHY IMPLEMENTED</h2>
+ * Essential component of the stateless authentication system:
+ * - Generates short-lived Access Tokens containing user claims and assigned roles.
+ * - Generates long-lived Refresh Tokens for token renewal.
+ * - Parses and validates JWT signatures using HMAC keys configured in {@link JWTProperties}.
+ * - Extracts `Bearer` authorization headers from HTTP servlet requests.
+ *
+ * <h2>WHAT HAPPENS IF NOT IMPLEMENTED</h2>
+ * - The application cannot issue authentication tokens during user sign-in (`AuthServiceImpl.signIn`).
+ * - Request validation filters (`JWTAuthFilter`) will be unable to verify incoming security credentials.
+ * ====================================================================================
+ */
 @Service
 @RequiredArgsConstructor
 public class JWTService {
 
     private final JWTProperties jwtProperties;
 
+    /**
+     * Generates a signed JWT Access Token containing user subject and assigned roles.
+     *
+     * @param user target user entity
+     * @return compact JWT access token string
+     */
     public String generateAccessToken(UserEntity user) {
         return Jwts.builder()
                 .setSubject(user.getUsername())
@@ -44,6 +70,12 @@ public class JWTService {
                 .compact();
     }
 
+    /**
+     * Generates a signed JWT Refresh Token for session renewal.
+     *
+     * @param user target user entity
+     * @return compact JWT refresh token string
+     */
     public String generateRefreshToken(UserEntity user) {
         return Jwts.builder()
                 .setSubject(user.getUsername())
@@ -53,6 +85,12 @@ public class JWTService {
                 .compact();
     }
 
+    /**
+     * Resolves the raw JWT token string from the HTTP `Authorization` header.
+     *
+     * @param httpServletRequest current HTTP request
+     * @return raw token string (excluding 'Bearer ' prefix) or null if header missing
+     */
     public String tokenResolver(HttpServletRequest httpServletRequest) {
         String bearerToken = httpServletRequest.getHeader(HttpHeaders.AUTHORIZATION);
         if (Objects.nonNull(bearerToken) && bearerToken.startsWith("Bearer ")) {
@@ -62,18 +100,34 @@ public class JWTService {
         }
     }
 
+    /**
+     * Parses all claims contained within a signed JWT token string.
+     *
+     * @param token compact JWT token
+     * @return parsed Claims body
+     */
     public Claims extractAllClaims(String token) {
         JwtParser jwtParser = Jwts.parser().setSigningKey(jwtProperties.getSecret());
         Jws<Claims> claimsJws = jwtParser.parseClaimsJws(token);
-        Claims body = claimsJws.getBody();
-//        return Jwts.parser().setSigningKey(secretKey).parseClaimsJws(token).getBody();
-        return body;
+        return claimsJws.getBody();
     }
 
+    /**
+     * Checks if a token is valid (valid signature and not expired).
+     *
+     * @param refreshToken target JWT token
+     * @return true if valid
+     */
     public boolean isTokenValid(String refreshToken) {
         return (validateToken(refreshToken) && !isTokenExpired(refreshToken));
     }
 
+    /**
+     * Verifies if a token has passed its expiration timestamp.
+     *
+     * @param token target JWT token
+     * @return true if expired or invalid
+     */
     public boolean isTokenExpired(String token) {
         try {
             Date expiration = extractAllClaims(token).getExpiration();
@@ -83,6 +137,12 @@ public class JWTService {
         }
     }
 
+    /**
+     * Validates cryptographic signature and structural integrity of a token.
+     *
+     * @param token target JWT token
+     * @return true if signature matches and structural integrity is intact
+     */
     public boolean validateToken(String token) {
         try {
             Jwts.parser().setSigningKey(jwtProperties.getSecret()).parseClaimsJws(token);
@@ -93,3 +153,4 @@ public class JWTService {
     }
 
 }
+

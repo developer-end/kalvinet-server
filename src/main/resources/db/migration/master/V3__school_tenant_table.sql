@@ -1,54 +1,52 @@
+-- ====================================================================================
+-- MIGRATION SCRIPT: V3__school_tenant_table.sql
+-- ====================================================================================
+
+-- ------------------------------------------------------------------------------------
+-- TABLE 1: master.school_table
+-- ------------------------------------------------------------------------------------
+-- [FUNCTIONALITY]:
+--   Stores individual school records in master catalog.
+--
+-- [WHY IMPLEMENTED]:
+--   Represents concrete physical or branch schools (e.g. "Springfield High School").
+-- ------------------------------------------------------------------------------------
 CREATE TABLE master.school_table
 (
     school_id      UUID PRIMARY KEY NOT NULL DEFAULT gen_random_uuid(),
-    institution_id UUID             NOT NULL,
     school_name    CITEXT           NOT NULL UNIQUE,
     version        BIGINT           NOT NULL,
+    started_date   TIMESTAMPTZ      NOT NULL DEFAULT now(),
     is_active      BOOLEAN          NOT NULL DEFAULT TRUE,
     created_at     TIMESTAMPTZ      NOT NULL DEFAULT now(),
-    updated_at     TIMESTAMPTZ      NOT NULL DEFAULT now(),
-
-    CONSTRAINT fk_school_table FOREIGN KEY (institution_id)
-        REFERENCES master.institution_table (institution_id) ON UPDATE CASCADE ON DELETE RESTRICT
+    updated_at     TIMESTAMPTZ      NOT NULL DEFAULT now()
 );
 CREATE INDEX idx_school_table_active ON master.school_table (is_active);
 
 
-
+-- ------------------------------------------------------------------------------------
+-- TABLE 2: master.tenant_table
+-- ------------------------------------------------------------------------------------
+-- [FUNCTIONALITY]:
+--   Stores metadata for database tenant schemas created in PostgreSQL.
+--
+-- [WHY IMPLEMENTED]:
+--   In schema-based multi-tenancy, each tenant represents a distinct PostgreSQL schema (e.g., `tenant_school_01`).
+--   `tenant_name` matches the physical schema name used by `SchemaMultiTenantConnectionProvider` and `TenantIdentifierResolver`.
+-- ------------------------------------------------------------------------------------
 CREATE TABLE master.tenant_table
 (
-    tenant_id   UUID PRIMARY KEY NOT NULL,
-    tenant_name CITEXT           NOT NULL UNIQUE,
-    description TEXT,
-    version     BIGINT           NOT NULL,
-    is_active   BOOLEAN          NOT NULL DEFAULT TRUE,
-    created_at  TIMESTAMPTZ      NOT NULL DEFAULT now(),
-    updated_at  TIMESTAMPTZ      NOT NULL DEFAULT now()
-);
-CREATE INDEX idx_tenant_table_active ON master.tenant_table (is_active);
-
-
-CREATE TABLE master.tenant_school
-(
-    school_id   UUID        NOT NULL,
     tenant_id   UUID        NOT NULL,
+    opened_date TIMESTAMPTZ NOT NULL DEFAULT now(),
+    tenant_name CITEXT      NOT NULL UNIQUE,
+    closed_date TIMESTAMPTZ NOT NULL DEFAULT now(),
     description TEXT,
     version     BIGINT      NOT NULL,
     is_active   BOOLEAN     NOT NULL DEFAULT TRUE,
-    assigned_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     created_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
 
-    PRIMARY KEY (school_id, tenant_id),
-
-    CONSTRAINT fk_tenant_school_school
-        FOREIGN KEY (school_id) REFERENCES master.school_table (school_id)
-            ON UPDATE CASCADE
-            ON DELETE RESTRICT,
-
-    CONSTRAINT uq_tenant_school_tenant
-        FOREIGN KEY (tenant_id) REFERENCES master.tenant_table (tenant_id)
-            ON UPDATE CASCADE
-            ON DELETE RESTRICT
+    PRIMARY KEY (tenant_id, opened_date)
 );
-CREATE INDEX idx_tenant_school_active ON master.tenant_school (is_active);
+CREATE INDEX idx_tenant_table_active ON master.tenant_table (is_active);
+CREATE INDEX idx_tenant_table_active_opened_closed ON master.tenant_table (is_active, opened_date, closed_date);

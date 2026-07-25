@@ -5,14 +5,14 @@ import app.school.administration.auth.infrastructure.persistence.entity.UserEnti
 import app.school.administration.auth.infrastructure.persistence.entity.embeddable.UserRoleId;
 import app.school.administration.common.infrastucture.persistence.entity.AuditableBaseEntity;
 import jakarta.persistence.Column;
-import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityListeners;
 import jakarta.persistence.FetchType;
+import jakarta.persistence.Id;
+import jakarta.persistence.IdClass;
 import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.MapsId;
 import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
@@ -25,22 +25,24 @@ import java.time.Instant;
 @Setter
 @EntityListeners(AuditingEntityListener.class)
 @Entity
+@IdClass(UserRoleId.class)
 @Table(name = "user_roles", schema = "master",
         indexes = {@Index(name = "idx_user_roles_active", columnList = "is_active")})
 public class UserRoleEntity extends AuditableBaseEntity {
 
-    @EmbeddedId
-    private UserRoleId id;
-    @Column(name = "description")
-    private String description;
+    @Id
     @ManyToOne(fetch = FetchType.LAZY)
-    @MapsId("userId")
     @JoinColumn(name = "user_id", nullable = false)
     private UserEntity user;
+
+    @Id
     @ManyToOne(fetch = FetchType.LAZY)
-    @MapsId("roleId")
     @JoinColumn(name = "role_id", nullable = false)
     private RoleEntity role;
+
+    @Column(name = "description")
+    private String description;
+
     @CreatedDate
     @Column(name = "assigned_at", nullable = false, updatable = false)
     private Instant assignedAt;
@@ -51,7 +53,6 @@ public class UserRoleEntity extends AuditableBaseEntity {
     public UserRoleEntity(UserEntity user, RoleEntity role) {
         this.user = user;
         this.role = role;
-        this.id = new UserRoleId(user.getId(), role.getId());
     }
 
 }

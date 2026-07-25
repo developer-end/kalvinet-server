@@ -8,9 +8,6 @@ public final class AppCommonEndPoint {
     public static final String DE_ACTIVATE = "/deActivate/{uuid}";
     public static final String ACTIVATE = "/activate/{uuid}";
 
-    public static final String TENANT_SCHOOL_MAPPING_DE_ACTIVATE = "/tenantSchoolMapping/deActivate/{uuid}";
-    public static final String TENANT_SCHOOL_MAPPING_ACTIVATE = "/tenantSchoolMapping/activate/{uuid}";
-
     public static final String USER_ROLE_MAPPING_DE_ACTIVATE = "/userRoleMapping/deActivate/{uuid}";
     public static final String USER_ROLE_MAPPING_ACTIVATE = "/userRoleMapping/activate/{uuid}";
 

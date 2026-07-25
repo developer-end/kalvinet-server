@@ -1,23 +1,19 @@
 package app.school.administration.auth.application.service;
 
 import app.school.administration.auth.infrastructure.persistence.entity.TenantEntity;
+import app.school.administration.auth.infrastructure.persistence.entity.embeddable.TenantId;
 import app.school.administration.auth.infrastructure.persistence.projection.TenantProjectionDTO;
-import app.school.administration.school.infrastructure.persistance.entity.embeddable.TenantSchoolId;
-
-import java.util.UUID;
 
 public interface TenantService {
 
-    TenantProjectionDTO findByIdProjection(UUID uuid);
+    TenantProjectionDTO findByIdProjection(TenantId tenantId);
 
-    TenantEntity deActivate(UUID uuid);
+    TenantEntity deActivate(TenantId tenantId);
 
-    Void tenantSchoolMappingDeActivate(TenantSchoolId uuid);
-
-    TenantEntity activate(UUID uuid);
+    TenantEntity activate(TenantId tenantId);
 
     TenantEntity save(TenantEntity tenantEntity);
 
-    TenantEntity update(TenantProjectionDTO dto, UUID uuid);
+    TenantEntity update(TenantProjectionDTO dto, TenantId tenantId);
 
 }

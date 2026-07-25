@@ -50,6 +50,27 @@ import java.util.Optional;
 import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 
+/**
+ * ====================================================================================
+ * ADVICE: GlobalExceptionHandler
+ * ====================================================================================
+ *
+ * <h2>FUNCTIONALITY</h2>
+ * Centralized exception handler intercepting all application exceptions across Spring Controllers using {@link RestControllerAdvice}.
+ * Translates Java, Spring Data, Security, SQL, and HTTP exceptions into a uniform JSON response structure ({@link AppResponse}).
+ *
+ * <h2>WHY IMPLEMENTED</h2>
+ * User experience and API security:
+ * - Formats all REST error outputs with standard timestamp, HTTP status code, request URL, message, and field errors list.
+ * - Prevents raw stack traces and internal database schemas from leaking to external callers.
+ * - Dynamically registers specialized exception handlers for database exceptions (`SQLException`, `ConstraintViolationException`),
+ *   validation failures (`MethodArgumentNotValidException`), authentication failures (`BadCredentialsException`), and custom business exceptions.
+ *
+ * <h2>WHAT HAPPENS IF NOT IMPLEMENTED</h2>
+ * - Uncaught exceptions will return raw HTTP 500 HTML pages or unformatted Spring trace objects to client applications.
+ * - Internal system implementation details and database query paths will be exposed to potential attackers.
+ * ====================================================================================
+ */
 @RestControllerAdvice
 public class GlobalExceptionHandler {
     private Map<Class<? extends Throwable>, BiFunction<Throwable, HttpServletRequest, ResponseEntity<AppResponse>>> exceptionHandlers;
@@ -57,6 +78,7 @@ public class GlobalExceptionHandler {
     public GlobalExceptionHandler() {
         this.exceptionHandlers = new HashMap<>();
         exceptionRegister(Exception.class, this::defaultError);
+
 
         exceptionRegister(SQLException.class, this::sqlExceptionHandler);
         exceptionRegister(InvalidDataAccessApiUsageException.class, this::invalidDataAccessApiUsageExceptionHandler);

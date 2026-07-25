@@ -25,12 +25,9 @@ public interface UserProjectionDTO extends AuditableProjectionDTO {
     }
 
     interface OAuthAccountProjectionDTO extends AuditableProjectionDTO {
-        String getInstitutionName();
+        String getProvider();
 
-        String getInstitutionCode();
-
-        String getDescription();
-
+        String getProviderUserId();
     }
 
 }

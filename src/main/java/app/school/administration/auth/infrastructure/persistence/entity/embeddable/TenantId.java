@@ -5,14 +5,15 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
+import java.time.Instant;
 import java.util.UUID;
 
 @Data
-@AllArgsConstructor
 @NoArgsConstructor
-public class UserRoleId implements Serializable {
+@AllArgsConstructor
+public class TenantId implements Serializable {
 
-    private UUID user;
-    private UUID role;
+    private UUID id;
+    private Instant openedDate;
 
 }

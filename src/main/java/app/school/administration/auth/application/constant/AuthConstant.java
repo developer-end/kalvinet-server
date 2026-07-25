@@ -8,9 +8,9 @@ public interface AuthConstant {
 
     Set<String> PUBLIC_ENDPOINTS = Set.of(
             AppModuleApi.AUTH,
-            AppModuleApi.O_AUTH
-            , AppModuleApi.SCHOOL
-            , AppModuleApi.INSTITUTION, AppModuleApi.TENANT
+            AppModuleApi.O_AUTH,
+            AppModuleApi.SCHOOL,
+            AppModuleApi.TENANT
     );
 
 }

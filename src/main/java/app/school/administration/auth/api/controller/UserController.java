@@ -6,7 +6,6 @@ import app.school.administration.auth.infrastructure.persistence.entity.embeddab
 import app.school.administration.auth.infrastructure.persistence.projection.UserProjectionDTO;
 import app.school.administration.common.utils.AppCommonEndPoint;
 import app.school.administration.common.utils.AppModuleApi;
-import app.school.administration.school.infrastructure.persistance.entity.embeddable.TenantSchoolId;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;

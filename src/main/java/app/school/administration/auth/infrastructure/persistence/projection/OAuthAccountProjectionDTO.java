@@ -3,11 +3,10 @@ package app.school.administration.auth.infrastructure.persistence.projection;
 import app.school.administration.common.infrastucture.persistence.projection.AuditableProjectionDTO;
 
 public interface OAuthAccountProjectionDTO extends AuditableProjectionDTO {
-    String getInstitutionName();
 
-    String getInstitutionCode();
+    String getProvider();
 
-    String getDescription();
+    String getProviderUserId();
 
     UserProjectionDTO getUserDto();
 
@@ -24,4 +23,5 @@ public interface OAuthAccountProjectionDTO extends AuditableProjectionDTO {
         String getMobileNo();
 
     }
+
 }
