@@ -9,10 +9,10 @@ import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 @SpringBootApplication
 @EnableJpaAuditing
 @EnableConfigurationProperties(JWTProperties.class)
-public class SchoolAdministrationServerApplication {
+public class KalviNetApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(SchoolAdministrationServerApplication.class, args);
+        SpringApplication.run(KalviNetApplication.class, args);
     }
 
 }

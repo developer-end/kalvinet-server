@@ -1,6 +1,6 @@
-# School Administration Server - Database Architecture & Connectivity Documentation
+# KalviNet Server - Database Architecture & Connectivity Documentation
 
-This document serves as the authoritative guide for the **Database Architecture, Multi-Tenant Flow, Schema Structure, Connection Routing, and Flyway Migrations** of the `SchoolAdministrationServer` project.
+This document serves as the authoritative guide for the **Database Architecture, Multi-Tenant Flow, Schema Structure, Connection Routing, and Flyway Migrations** of the `KalviNet` project.
 
 ---
 
@@ -86,7 +86,7 @@ Configured in [application.yaml](file:///d:/projects-com/administration/src/main
 spring:
   datasource:
     hikari:
-      pool-name: school-erp-hikari-pool
+      pool-name: kalvinet-hikari-pool
       maximum-pool-size: 15
       minimum-idle: 5
       connection-timeout: 10000     # 10 seconds max wait for connection

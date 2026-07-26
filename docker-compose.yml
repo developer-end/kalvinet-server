@@ -3,7 +3,7 @@
 # ====================================================================================
 # [FUNCTIONALITY]:
 #   Orchestrates a standalone PostgreSQL 16 database container (`school-admin-postgres`)
-#   for local development while the Spring Boot backend (`SchoolAdministrationServer`) runs natively on host.
+#   for local development while the Spring Boot backend (`KalviNet`) runs natively on host.
 #
 # [WHY IMPLEMENTED]:
 #   1. Zero Local Installation Overhead: Eliminates local PostgreSQL installation, service configuration, and version conflicts.

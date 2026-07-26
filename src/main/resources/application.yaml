@@ -31,7 +31,7 @@ server:
 # ------------------------------------------------------------------------------------
 spring:
   application:
-    name: SchoolAdministrationServer
+    name: KalviNet
 
   profiles:
     active: local
@@ -88,7 +88,7 @@ spring:
 # ------------------------------------------------------------------------------------
   datasource:
     hikari:
-      pool-name: school-erp-hikari-pool
+      pool-name: kalvinet-hikari-pool
       maximum-pool-size: 15
       minimum-idle: 5
       connection-timeout: 10000

@@ -11,8 +11,8 @@
     <groupId>app.school</groupId>
     <artifactId>administration</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>SchoolAdministrationServer</name>
-    <description>School Administration and Management Application Server</description>
+    <name>KalviNet</name>
+    <description>KalviNet Administration and Management Application Server</description>
     <url/>
     <licenses>
         <license/>
