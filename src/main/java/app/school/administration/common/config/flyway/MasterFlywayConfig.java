@@ -39,14 +39,11 @@ public class MasterFlywayConfig {
     Flyway masterFlyway(DataSource dataSource) {
         Flyway flyway = Flyway.configure()
                 .dataSource(dataSource)
-                .locations(
-                    "classpath:db/migration/master",
-                    "classpath:db/migration/tenant"
-                )
-                .schemas("master")
+                .locations("classpath:db/migration/public")
+                .schemas("public")
                 .createSchemas(true)
                 .baselineOnMigrate(true)
-                .baselineVersion("1")
+                .baselineVersion("0")
                 .validateOnMigrate(false)
                 .table("flyway_schema_history")
                 .load();
@@ -66,14 +63,11 @@ public class MasterFlywayConfig {
     Flyway masterFlywayInProd(DataSource dataSource) {
         Flyway flyway = Flyway.configure()
                 .dataSource(dataSource)
-                .locations(
-                    "classpath:db/migration/master",
-                    "classpath:db/migration/tenant"
-                )
-                .schemas("master")
+                .locations("classpath:db/migration/public")
+                .schemas("public")
                 .createSchemas(true)
                 .baselineOnMigrate(true)
-                .baselineVersion("1")
+                .baselineVersion("0")
                 .validateOnMigrate(true)
                 .table("flyway_schema_history")
                 .load();

@@ -3,19 +3,33 @@
 # ====================================================================================
 # [FUNCTIONALITY]:
 #   Specifies local database connection parameters (driver class, JDBC connection URL, username, password)
-#   for the 'local' Spring active profile.
+#   and Google OAuth2 Client configurations for the 'local' Spring active profile.
 #
-# [WHY IMPLEMENTED]:
-#   Separates local development credentials (`school-admin` database on localhost) from staging and production
-#   configurations, preventing hardcoded credentials in standard application settings.
-#
-# [WHAT HAPPENS IF NOT IMPLEMENTED]:
-#   Spring Boot will fail to create a DataSource connection pool, throwing `Cannot-Get-Jdbc-Connection` or
-#   `PSQLException` at application startup.
+# [USAGE]:
+#   Set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET environment variables or update the fields below.
 # ====================================================================================
 spring:
   datasource:
     driver-class-name: org.postgresql.Driver
-    url: jdbc:postgresql://localhost:5432/school-admin
+    url: jdbc:postgresql://localhost:5454/kalvinet-local-dev
     username: postgres
-    password: root
+    password: root
+
+  jpa:
+    hibernate:
+      show-sql: true
+
+  security:
+    cors:
+      allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:4200,http://localhost:3000}
+    oauth2:
+      frontend-url: ${FRONTEND_URL:http://localhost:4200}
+      client:
+        registration:
+          google:
+            client-id: ${GOOGLE_CLIENT_ID:kalvinet-google-client-id.apps.googleusercontent.com}
+            client-secret: ${GOOGLE_CLIENT_SECRET:kalvinet-google-client-secret}
+            scope:
+              - openid
+              - profile
+              - email

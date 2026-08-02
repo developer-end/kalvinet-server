@@ -1,7 +1,9 @@
 package app.school.administration.auth.api.controller;
 
 import app.school.administration.auth.api.request.SignInRequestDTO;
+import app.school.administration.auth.api.request.SignUpRequestDTO;
 import app.school.administration.auth.api.response.SignInResponseDTO;
+import app.school.administration.auth.api.response.SignUpResponseDTO;
 import app.school.administration.auth.application.serviceimpl.AuthServiceImpl;
 import app.school.administration.common.utils.AppAuthEndPoints;
 import app.school.administration.common.utils.AppModuleApi;
@@ -47,6 +49,17 @@ public class AuthController {
     @PostMapping(AppAuthEndPoints.SIGN_IN)
     public ResponseEntity<SignInResponseDTO> signIn(@Validated @RequestBody SignInRequestDTO dto) {
         return ResponseEntity.ok(authService.signIn(dto));
+    }
+
+    /**
+     * User sign-up / registration REST API endpoint.
+     *
+     * @param dto sign-up request payload containing user registration details
+     * @return ResponseEntity containing SignUpResponseDTO
+     */
+    @PostMapping(AppAuthEndPoints.SIGN_UP)
+    public ResponseEntity<SignUpResponseDTO> signUp(@Validated @RequestBody SignUpRequestDTO dto) {
+        return ResponseEntity.ok(authService.signUp(dto));
     }
 
 }

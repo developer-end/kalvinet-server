@@ -32,7 +32,7 @@ services:
   # ----------------------------------------------------------------------------------
   postgres:
     image: postgres:16-alpine
-    container_name: school-admin-postgres
+    container_name: kalvinet-local-dev-db
     restart: unless-stopped
 
     # --------------------------------------------------------------------------------
@@ -50,7 +50,7 @@ services:
     #   PostgreSQL container will fail to start (`POSTGRES_PASSWORD` is mandatory in official image).
     # --------------------------------------------------------------------------------
     environment:
-      POSTGRES_DB: ${POSTGRES_DB:-school-admin}
+      POSTGRES_DB: ${POSTGRES_DB:-kalvinet-local-dev}
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-root}
       PGDATA: /var/lib/postgresql/data/pgdata
@@ -69,7 +69,7 @@ services:
     #   The database will run inside isolated Docker container network, but Spring Boot on host machine will throw `PSQLException: Connection refused`.
     # --------------------------------------------------------------------------------
     ports:
-      - "${POSTGRES_PORT:-5432}:5432"
+      - "${POSTGRES_PORT:-5454}:5432"
 
     # --------------------------------------------------------------------------------
     # DATA PERSISTENCE VOLUMES
@@ -94,7 +94,7 @@ services:
     #   Periodically executes `pg_isready` inside container to test whether PostgreSQL engine is ready for SQL connections.
     #
     # [WHY IMPLEMENTED]:
-    #   - `test`: Verifies connection to database `school-admin` using user `postgres`.
+    #   - `test`: Verifies connection to database `kalvinet-local-dev` using user `postgres`.
     #   - `interval: 5s` / `timeout: 5s` / `retries: 5`: Checks readiness every 5 seconds; marks healthy after successful check.
     #   - Enables automated tooling and CI/CD pipelines to wait until PostgreSQL accepts incoming socket connections before starting Spring Boot server.
     #
@@ -102,7 +102,7 @@ services:
     #   Spring Boot application might attempt to boot while PostgreSQL container is still initializing, causing Flyway startup migration failures.
     # --------------------------------------------------------------------------------
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-school-admin}"]
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-kalvinet-local-dev}" ]
       interval: 5s
       timeout: 5s
       retries: 5

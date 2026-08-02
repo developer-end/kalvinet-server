@@ -18,7 +18,7 @@ import java.util.UUID;
 @Getter
 @Setter
 @Entity
-@Table(name = "role_table", schema = "master",
+@Table(name = "role_table", schema = "public",
         indexes = {
                 @Index(name = "idx_role_table_active", columnList = "is_active")
         })

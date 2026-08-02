@@ -27,7 +27,7 @@ import java.util.UUID;
 
 @Entity
 @Table(
-        name = "oauth_accounts", schema = "master",
+        name = "oauth_accounts", schema = "public",
         uniqueConstraints = {
                 @UniqueConstraint(
                         name = "uq_provider_user",

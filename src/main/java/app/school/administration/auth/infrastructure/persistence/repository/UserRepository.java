@@ -17,4 +17,9 @@ public interface UserRepository extends AppBaseRepository<UserEntity, UUID> {
     @Transactional(readOnly = true)
     Optional<UserEntity> findByUsernameAndPassword(String username, String password);
 
+    @Transactional(readOnly = true)
+    boolean existsByUsernameIgnoreCase(String username);
+
+    @Transactional(readOnly = true)
+    boolean existsByEmailIgnoreCase(String email);
 }

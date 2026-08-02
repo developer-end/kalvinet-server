@@ -13,7 +13,7 @@ public class FlywayConfig {
 
     @Bean
     public DataSource dataSource(DataSourceProperties props) {
-        String defaultPaths = "master, public";
+        String defaultPaths = "public";
         String tenant = TenantContext.getTenant();
 
         String searchPath = (tenant == null || tenant.isBlank())

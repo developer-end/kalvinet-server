@@ -15,6 +15,8 @@ public interface TenantRepository extends AppBaseRepository<TenantEntity, Tenant
 
     Optional<TenantEntity> findById(UUID id);
 
+    boolean existsByTenantName(String tenantName);
+
     List<TenantEntity> findByActiveAndOpenedDateGreaterThanEqualAndClosedDateLessThanEqual(
             boolean active, Instant openedDate, Instant closedDate);
 

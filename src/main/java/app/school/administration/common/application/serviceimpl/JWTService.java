@@ -18,7 +18,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Service;
 
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.Objects;
@@ -31,17 +34,6 @@ import java.util.stream.Collectors;
  *
  * <h2>FUNCTIONALITY</h2>
  * Utility service for generating, parsing, validating, and resolving JSON Web Tokens (JWTs) using HMAC-SHA256 signing algorithms.
- *
- * <h2>WHY IMPLEMENTED</h2>
- * Essential component of the stateless authentication system:
- * - Generates short-lived Access Tokens containing user claims and assigned roles.
- * - Generates long-lived Refresh Tokens for token renewal.
- * - Parses and validates JWT signatures using HMAC keys configured in {@link JWTProperties}.
- * - Extracts `Bearer` authorization headers from HTTP servlet requests.
- *
- * <h2>WHAT HAPPENS IF NOT IMPLEMENTED</h2>
- * - The application cannot issue authentication tokens during user sign-in (`AuthServiceImpl.signIn`).
- * - Request validation filters (`JWTAuthFilter`) will be unable to verify incoming security credentials.
  * ====================================================================================
  */
 @Service
@@ -66,7 +58,7 @@ public class JWTService {
                 )
                 .setIssuedAt(new Date())
                 .setExpiration(Date.from(Instant.now().plus(jwtProperties.getAccessTokenExpireDays(), ChronoUnit.DAYS)))
-                .signWith(Keys.hmacShaKeyFor(jwtProperties.getSecret().getBytes()), SignatureAlgorithm.HS256)
+                .signWith(Keys.hmacShaKeyFor(jwtProperties.getSecret().getBytes(StandardCharsets.UTF_8)), SignatureAlgorithm.HS256)
                 .compact();
     }
 
@@ -80,8 +72,8 @@ public class JWTService {
         return Jwts.builder()
                 .setSubject(user.getUsername())
                 .setIssuedAt(new Date())
-                .setExpiration(Date.from(Instant.now().plus(jwtProperties.getRefreshTokenExpireMonths(), ChronoUnit.MONTHS)))
-                .signWith(Keys.hmacShaKeyFor(jwtProperties.getSecret().getBytes()), SignatureAlgorithm.HS256)
+                .setExpiration(Date.from(ZonedDateTime.now(ZoneOffset.UTC).plusMonths(jwtProperties.getRefreshTokenExpireMonths()).toInstant()))
+                .signWith(Keys.hmacShaKeyFor(jwtProperties.getSecret().getBytes(StandardCharsets.UTF_8)), SignatureAlgorithm.HS256)
                 .compact();
     }
 
@@ -107,7 +99,9 @@ public class JWTService {
      * @return parsed Claims body
      */
     public Claims extractAllClaims(String token) {
-        JwtParser jwtParser = Jwts.parser().setSigningKey(jwtProperties.getSecret());
+        JwtParser jwtParser = Jwts.parserBuilder()
+                .setSigningKey(Keys.hmacShaKeyFor(jwtProperties.getSecret().getBytes(StandardCharsets.UTF_8)))
+                .build();
         Jws<Claims> claimsJws = jwtParser.parseClaimsJws(token);
         return claimsJws.getBody();
     }
@@ -145,7 +139,10 @@ public class JWTService {
      */
     public boolean validateToken(String token) {
         try {
-            Jwts.parser().setSigningKey(jwtProperties.getSecret()).parseClaimsJws(token);
+            Jwts.parserBuilder()
+                    .setSigningKey(Keys.hmacShaKeyFor(jwtProperties.getSecret().getBytes(StandardCharsets.UTF_8)))
+                    .build()
+                    .parseClaimsJws(token);
             return true;
         } catch (JwtException | IllegalArgumentException e) {
             return false;

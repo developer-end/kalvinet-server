@@ -24,7 +24,7 @@
 --   - CASE 3 (User Deletion -> `master.role_table`): `master.role_table` entries ARE NOT DELETED.
 --     Roles are aggregate master entities shared across all system users. Deleting a user only disassociates the user from roles by deleting `master.user_roles` records.
 -- ------------------------------------------------------------------------------------
-CREATE TABLE master.user_table
+CREATE TABLE public.user_table
 (
     user_id    UUID PRIMARY KEY NOT NULL DEFAULT gen_random_uuid(),
     first_name VARCHAR(100)     NOT NULL,
@@ -38,9 +38,9 @@ CREATE TABLE master.user_table
     created_at TIMESTAMPTZ      NOT NULL DEFAULT now(),
     updated_at TIMESTAMPTZ      NOT NULL DEFAULT now()
 );
-CREATE INDEX idx_users_email ON master.user_table (email);
-CREATE INDEX idx_users_username ON master.user_table (username);
-CREATE INDEX idx_user_active ON master.user_table (is_active);
+CREATE INDEX idx_users_email ON public.user_table (email);
+CREATE INDEX idx_users_username ON public.user_table (username);
+CREATE INDEX idx_user_active ON public.user_table (is_active);
 
 
 -- ------------------------------------------------------------------------------------
@@ -62,7 +62,7 @@ CREATE INDEX idx_user_active ON master.user_table (is_active);
 --   - CASE 2 (User Deletion -> `master.oauth_accounts`): When a parent user is deleted from `master.user_table`,
 --     `ON DELETE CASCADE` automatically removes all associated OAuth provider entries in `master.oauth_accounts`.
 -- ------------------------------------------------------------------------------------
-CREATE TABLE master.oauth_accounts
+CREATE TABLE public.oauth_accounts
 (
     oauth_id         UUID PRIMARY KEY      DEFAULT gen_random_uuid(),
     user_id          UUID         NOT NULL,
@@ -73,14 +73,14 @@ CREATE TABLE master.oauth_accounts
     created_at       TIMESTAMPTZ  NOT NULL DEFAULT now(),
     updated_at       TIMESTAMPTZ  NOT NULL DEFAULT now(),
     CONSTRAINT fk_oauth_user
-        FOREIGN KEY (user_id) REFERENCES master.user_table (user_id)
+        FOREIGN KEY (user_id) REFERENCES public.user_table (user_id)
             ON DELETE CASCADE
 );
 CREATE UNIQUE INDEX idx_oauth_provider_user
-    ON master.oauth_accounts (provider, provider_user_id);
+    ON public.oauth_accounts (provider, provider_user_id);
 CREATE UNIQUE INDEX idx_oauth_provider_user_id
-    ON master.oauth_accounts (provider, user_id);
-CREATE INDEX idx_oauth_provider_active ON master.oauth_accounts (is_active);
+    ON public.oauth_accounts (provider, user_id);
+CREATE INDEX idx_oauth_provider_active ON public.oauth_accounts (is_active);
 
 
 -- ------------------------------------------------------------------------------------
@@ -104,7 +104,7 @@ CREATE INDEX idx_oauth_provider_active ON master.oauth_accounts (is_active);
 --   - CASE 3 (Role Aggregation / System Role Deletion Restriction): Pre-seeded system roles (`ROLE_SUPER_ADMIN`, `ROLE_ADMIN`, `ROLE_TEACHER`, `ROLE_STUDENT`, `ROLE_ACCOUNTANT`, `ROLE_USER`)
 --     are aggregated into system logic and security authorities. Deleting system roles is strongly discouraged as active user authorizations will break.
 -- ------------------------------------------------------------------------------------
-CREATE TABLE master.role_table
+CREATE TABLE public.role_table
 (
     role_id     UUID PRIMARY KEY      DEFAULT gen_random_uuid(),
     role_code   CITEXT       NOT NULL UNIQUE,
@@ -115,9 +115,9 @@ CREATE TABLE master.role_table
     created_at  TIMESTAMPTZ  NOT NULL DEFAULT now(),
     updated_at  TIMESTAMPTZ  NOT NULL DEFAULT now()
 );
-CREATE INDEX idx_role_table_active ON master.role_table (is_active);
+CREATE INDEX idx_role_table_active ON public.role_table (is_active);
 
-INSERT INTO master.role_table (role_code, role_name, version)
+INSERT INTO public.role_table (role_code, role_name, version)
 VALUES ('ROLE_SUPER_ADMIN', 'Super Administrator', 1),
        ('ROLE_ADMIN', 'Administrator', 1),
        ('ROLE_TEACHER', 'Teacher', 1),
@@ -144,7 +144,7 @@ VALUES ('ROLE_SUPER_ADMIN', 'Super Administrator', 1),
 --   - CASE 2 (User or Role Deletion): Deleting either a parent user or a parent role triggers `ON DELETE CASCADE`,
 --     automatically cleaning up the corresponding join records in `master.user_roles`.
 -- ------------------------------------------------------------------------------------
-CREATE TABLE master.user_roles
+CREATE TABLE public.user_roles
 (
     user_id     UUID        NOT NULL,
     role_id     UUID        NOT NULL,
@@ -157,11 +157,11 @@ CREATE TABLE master.user_roles
     PRIMARY KEY (user_id, role_id),
 
     CONSTRAINT fk_user_roles_user
-        FOREIGN KEY (user_id) REFERENCES master.user_table (user_id)
+        FOREIGN KEY (user_id) REFERENCES public.user_table (user_id)
             ON DELETE CASCADE,
 
     CONSTRAINT fk_user_roles_role
-        FOREIGN KEY (role_id) REFERENCES master.role_table (role_id)
+        FOREIGN KEY (role_id) REFERENCES public.role_table (role_id)
             ON DELETE CASCADE
 );
-CREATE INDEX idx_user_roles_active ON master.user_roles (is_active);
+CREATE INDEX idx_user_roles_active ON public.user_roles (is_active);

@@ -21,7 +21,7 @@ import java.util.UUID;
 @Setter
 @Entity
 @IdClass(TenantId.class)
-@Table(name = "tenant_table", schema = "master",
+@Table(name = "tenant_table", schema = "public",
         indexes = {
                 @Index(name = "idx_tenant_table_active", columnList = "is_active"),
                 @Index(name = "idx_tenant_table_active_opened_closed", columnList = "is_active, opened_date, closed_date")
@@ -48,7 +48,7 @@ public class TenantEntity extends AuditableBaseEntity {
     @Column(name = "description")
     private String description;
 
-    protected TenantEntity() {
+    public TenantEntity() {
     }
 
 }

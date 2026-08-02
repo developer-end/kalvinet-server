@@ -26,7 +26,7 @@ import java.time.Instant;
 @EntityListeners(AuditingEntityListener.class)
 @Entity
 @IdClass(UserRoleId.class)
-@Table(name = "user_roles", schema = "master",
+@Table(name = "user_roles", schema = "public",
         indexes = {@Index(name = "idx_user_roles_active", columnList = "is_active")})
 public class UserRoleEntity extends AuditableBaseEntity {
 
@@ -36,7 +36,7 @@ public class UserRoleEntity extends AuditableBaseEntity {
     private UserEntity user;
 
     @Id
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "role_id", nullable = false)
     private RoleEntity role;
 

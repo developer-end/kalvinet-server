@@ -10,7 +10,13 @@ public interface AuthConstant {
             AppModuleApi.AUTH,
             AppModuleApi.O_AUTH,
             AppModuleApi.SCHOOL,
-            AppModuleApi.TENANT
+            AppModuleApi.TENANT,
+            "/api/v1/dashboard",
+            "/ws",
+            "/v3/api-docs",
+            "/swagger-ui",
+            "/api/requests",
+            "/api/health"
     );
 
 }

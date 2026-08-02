@@ -122,8 +122,12 @@ spring:
 #   JWT generation and validation will throw `IllegalArgumentException` due to null secret keys or zero expiration durations.
 # ------------------------------------------------------------------------------------
 security:
+  cors:
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:4200,http://localhost:3000}
   jwt:
     secret: F_n,cPUG(.OYmru-c4mxG4^s)*5$yoKy6gxJ9#t]#=OlkJ%u&R8(Kx_]fwD
     access-token-expire-days: 15
     refresh-token-expire-months: 2
+  oauth2:
+    frontend-url: ${FRONTEND_URL:http://localhost:4200}
 

@@ -32,7 +32,7 @@ public class TenantIdentifierResolver implements CurrentTenantIdentifierResolver
     /**
      * Default schema fallback when no tenant context is bound to the executing thread.
      */
-    private static final String DEFAULT_SCHEMA = "master, public";
+    private static final String DEFAULT_SCHEMA = "public";
 
     /**
      * Resolves the current tenant's database schema identifier.

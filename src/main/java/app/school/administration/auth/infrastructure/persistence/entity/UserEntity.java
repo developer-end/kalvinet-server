@@ -23,7 +23,7 @@ import java.util.UUID;
 @Entity
 @Getter
 @Setter
-@Table(name = "user_table", schema = "master",
+@Table(name = "user_table", schema = "public",
         indexes = {
                 @Index(name = "idx_users_username", columnList = "username"),
                 @Index(name = "idx_user_email", columnList = "email"),
@@ -51,7 +51,9 @@ public class UserEntity extends AuditableBaseEntity {
     private String mobileNo;
     @OneToMany(
             mappedBy = "user",
-            fetch = FetchType.LAZY
+            fetch = FetchType.EAGER,
+            cascade = jakarta.persistence.CascadeType.ALL,
+            orphanRemoval = true
     )
     @Where(clause = "is_active = true")
     private Set<UserRoleEntity> roles = new HashSet<>();
@@ -66,6 +68,15 @@ public class UserEntity extends AuditableBaseEntity {
      * (protected will accessible only for the package level and the sub class in any package)
      */
     protected UserEntity() {
+    }
+
+    public UserEntity(String firstName, String lastName, String email, String username, String password, String mobileNo) {
+        this.firstName = firstName;
+        this.lastName = lastName != null ? lastName : "";
+        this.email = email;
+        this.username = username;
+        this.password = password;
+        this.mobileNo = mobileNo;
     }
 
     // Domain-safe methods

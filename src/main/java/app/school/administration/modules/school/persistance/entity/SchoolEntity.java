@@ -21,7 +21,7 @@ import java.util.UUID;
 @Entity
 @DynamicUpdate
 @DynamicInsert
-@Table(name = "school_table", schema = "master",
+@Table(name = "school_table", schema = "public",
         indexes = {@Index(name = "idx_school_table_active", columnList = "is_active")})
 public class SchoolEntity extends AuditableBaseEntity {
 
