@@ -1,8 +1,10 @@
 # Module Architecture Specification: Dual Google OAuth2 & Username/Password Authentication
 
+> **Status: target / aspirational.** Current implemented behavior (HS256 JWT, `public` schema, OAuth redirect without token issue) is documented in [`docs/APPLICATION.md`](../../APPLICATION.md) and [`docs/implementation/auth-security.md`](../../implementation/auth-security.md). Prefer those when coding; use this file as a design target only.
+
 **Module**: `app.school.administration.auth`  
-**Target Platform**: Web Application (React Frontend + Spring Boot 3.x Backend)  
-**Schema**: `master` (PostgreSQL)  
+**Target Platform**: Web Application (Angular Frontend + Spring Boot 3.x Backend)  
+**Schema**: `master` (PostgreSQL) — *design target; runtime migrations use `public`*  
 **Security Standard**: RS256 Asymmetric JWT + SHA-256 Hashed Refresh Token Rotation (RTR)
 
 ---

@@ -1,0 +1,22 @@
+---
+description: Auth, JWT, OAuth2, and SecurityConfig — keep aligned with docs
+globs: "**/auth/**,**/common/config/security/**,**/JWT*.java,**/OAuth2*.java,**/AuthConstant.java"
+alwaysApply: false
+---
+
+# Auth & security
+
+**Deep dive:** `docs/implementation/auth-security.md`  
+**Living status:** `docs/APPLICATION.md`
+
+| Concern | Path |
+|---|---|
+| Filter chain | `common/config/security/SecurityConfig.java` |
+| Public prefixes | `auth/application/constant/AuthConstant.java` |
+| Sign in/up | `auth/api/controller/AuthController.java` |
+| JWT | `common/application/serviceimpl/JWTService.java` + `JWTAuthFilter` |
+| OAuth redirect | `auth/application/component/OAuth2SuccessHandler.java` |
+
+- Default new APIs to **authenticated**; only add to `PUBLIC_ENDPOINTS` when anonymous access is required.
+- OAuth success currently redirects to the frontend **without** issuing JWT — document if you change that.
+- Spec under `docs/modules/auth/` may be aspirational; trust `APPLICATION.md` for current behavior.

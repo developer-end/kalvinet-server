@@ -1,0 +1,22 @@
+---
+description: Schema multi-tenancy, TenantContext, Flyway tenant migrations
+globs: "**/Tenant*.java,**/Flyway*.java,**/SchemaMultiTenant*.java,**/db/migration/**"
+alwaysApply: false
+---
+
+# Multi-tenancy
+
+**Deep dive:** `docs/implementation/multi-tenancy.md`  
+**DB guide:** `DATABASE_README.md`
+
+| Concern | Path |
+|---|---|
+| ThreadLocal schema | `auth/application/context/TenantContext.java` |
+| Hibernate resolver | `common/application/component/TenantIdentifierResolver.java` |
+| Connection provider | `auth/application/component/SchemaMultiTenantConnectionProvider.java` |
+| Tenant Flyway | `common/application/serviceimpl/TenantMigrationService.java` |
+| Public Flyway | `common/config/flyway/MasterFlywayConfig.java` |
+
+- Catalog schema in use: **`public`** (not historical `master` docs).
+- `TenantContext.setTenant` is not wired from JWT/`X-Tenant-ID` yet — set + clear it when implementing routing.
+- Put tenant DDL in `src/main/resources/db/migration/tenant/`.

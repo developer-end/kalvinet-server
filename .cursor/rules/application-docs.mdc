@@ -1,0 +1,16 @@
+---
+description: Keep docs/APPLICATION.md updated — open docs for all agents/IDEs
+alwaysApply: true
+---
+
+# Living application documentation
+
+Source of truth is **open Markdown** (not Cursor-only): `docs/APPLICATION.md`, `AGENTS.md`, `docs/`.
+
+After **any** code or functionality change, update `docs/APPLICATION.md` in the same turn:
+
+1. Adjust the matching section (APIs, security, tenancy, services, gaps).
+2. Set **Last reviewed** to today’s date.
+3. If a shared pattern was added, also update `AGENTS.md` and `docs/implementation/` as needed.
+
+Any AI agent or IDE may read/edit these files. Do not finish a feature/bugfix that changes API or security behavior without updating `docs/APPLICATION.md`.
