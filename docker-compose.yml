@@ -1,106 +1,43 @@
 # ====================================================================================
 # DOCKER COMPOSE CONFIGURATION: docker-compose.yml
 # ====================================================================================
-# [FUNCTIONALITY]:
-#   Orchestrates a standalone PostgreSQL 16 database container (`school-admin-postgres`)
-#   for local development while the Spring Boot backend (`KalviNet`) runs natively on host.
+# Canonical local PostgreSQL stack for KalviNet (must match application-local.yaml
+# and .env.example):
 #
-# [WHY IMPLEMENTED]:
-#   1. Zero Local Installation Overhead: Eliminates local PostgreSQL installation, service configuration, and version conflicts.
-#   2. Environment Parity: Ensures all developers execute tests and Flyway migrations against an identical PostgreSQL 16 Alpine environment.
-#   3. Instant Data Isolation & Lifecycle: Enables one-command database provisioning (`docker compose up -d`) and teardown.
-#   4. Seamless Spring Boot Integration: Pre-configured credentials match `application-local.yaml` defaults (`jdbc:postgresql://localhost:5432/school-admin`).
+#   Container : kalvinet-local-dev-db
+#   Database  : kalvinet-local-dev
+#   User      : postgres
+#   Password  : root
+#   Host port : 5454  →  container 5432
+#   Volume    : kalvinet_local_dev_pgdata
+#   JDBC URL  : jdbc:postgresql://localhost:5454/kalvinet-local-dev
 #
-# [WHAT HAPPENS IF NOT IMPLEMENTED]:
-#   Developers must manually install, configure, and maintain PostgreSQL locally, risking environment drift,
-#   missing PostgreSQL extensions (`pgcrypto`, `citext`), credential mismatches, or background service conflicts.
+# Usage:
+#   docker compose up -d postgres
+#   docker compose down            # keeps volume
+#   docker compose down -v         # wipe data for a fresh Flyway migrate
 # ====================================================================================
 
 version: "3.9"
 
 services:
-  # ----------------------------------------------------------------------------------
-  # SERVICE 1: POSTGRESQL DATABASE CONTAINER
-  # ----------------------------------------------------------------------------------
-  # [FUNCTIONALITY]:
-  #   Runs PostgreSQL 16 Alpine instance handling master identity schemas and dynamic tenant database schemas.
-  #
-  # [WHY IMPLEMENTED]:
-  #   - `image: postgres:16-alpine`: Lightweight, minimal vulnerability footprint image with standard `pgcrypto` and `citext` support.
-  #   - `container_name: school-admin-postgres`: Provides predictable container naming for shell commands and monitoring.
-  #   - `restart: unless-stopped`: Ensures database container automatically restarts if crashed or after host machine reboot.
-  # ----------------------------------------------------------------------------------
   postgres:
     image: postgres:16-alpine
     container_name: kalvinet-local-dev-db
     restart: unless-stopped
 
-    # --------------------------------------------------------------------------------
-    # CONTAINER ENVIRONMENT VARIABLES
-    # --------------------------------------------------------------------------------
-    # [FUNCTIONALITY]:
-    #   Initializes default database name, administrative superuser credentials, and internal data path.
-    #
-    # [WHY IMPLEMENTED]:
-    #   - `POSTGRES_DB`: Creates primary `school-admin` database required on initial boot.
-    #   - `POSTGRES_USER` / `POSTGRES_PASSWORD`: Sets default superuser (`postgres`/`root`) matching `application-local.yaml`.
-    #   - Environment variable interpolation (e.g. `${POSTGRES_DB:-school-admin}`) allows overriding values via `.env` file without modifying compose file.
-    #
-    # [WHAT HAPPENS IF NOT IMPLEMENTED]:
-    #   PostgreSQL container will fail to start (`POSTGRES_PASSWORD` is mandatory in official image).
-    # --------------------------------------------------------------------------------
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-kalvinet-local-dev}
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-root}
       PGDATA: /var/lib/postgresql/data/pgdata
 
-    # --------------------------------------------------------------------------------
-    # NETWORK PORT MAPPING
-    # --------------------------------------------------------------------------------
-    # [FUNCTIONALITY]:
-    #   Maps container internal PostgreSQL port 5432 to host machine port 5432 (`5432:5432`).
-    #
-    # [WHY IMPLEMENTED]:
-    #   Allows native Spring Boot application running on `localhost:8081` to connect directly to
-    #   `jdbc:postgresql://localhost:5432/school-admin`.
-    #
-    # [WHAT HAPPENS IF NOT IMPLEMENTED]:
-    #   The database will run inside isolated Docker container network, but Spring Boot on host machine will throw `PSQLException: Connection refused`.
-    # --------------------------------------------------------------------------------
     ports:
       - "${POSTGRES_PORT:-5454}:5432"
 
-    # --------------------------------------------------------------------------------
-    # DATA PERSISTENCE VOLUMES
-    # --------------------------------------------------------------------------------
-    # [FUNCTIONALITY]:
-    #   Mounts named volume `school_admin_pgdata` to container data storage path `/var/lib/postgresql/data`.
-    #
-    # [WHY IMPLEMENTED]:
-    #   Docker containers are ephemeral by nature. Mounting a named volume ensures master tables, user credentials,
-    #   and tenant schema data persist safely across container stops (`docker compose down`) and restarts.
-    #
-    # [WHAT HAPPENS IF NOT IMPLEMENTED]:
-    #   All database tables, seeded roles, and registered tenant schemas will be permanently destroyed whenever container stops or restarts.
-    # --------------------------------------------------------------------------------
     volumes:
-      - school_admin_pgdata:/var/lib/postgresql/data
+      - kalvinet_local_dev_pgdata:/var/lib/postgresql/data
 
-    # --------------------------------------------------------------------------------
-    # CONTAINER HEALTHCHECK
-    # --------------------------------------------------------------------------------
-    # [FUNCTIONALITY]:
-    #   Periodically executes `pg_isready` inside container to test whether PostgreSQL engine is ready for SQL connections.
-    #
-    # [WHY IMPLEMENTED]:
-    #   - `test`: Verifies connection to database `kalvinet-local-dev` using user `postgres`.
-    #   - `interval: 5s` / `timeout: 5s` / `retries: 5`: Checks readiness every 5 seconds; marks healthy after successful check.
-    #   - Enables automated tooling and CI/CD pipelines to wait until PostgreSQL accepts incoming socket connections before starting Spring Boot server.
-    #
-    # [WHAT HAPPENS IF NOT IMPLEMENTED]:
-    #   Spring Boot application might attempt to boot while PostgreSQL container is still initializing, causing Flyway startup migration failures.
-    # --------------------------------------------------------------------------------
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-kalvinet-local-dev}" ]
       interval: 5s
@@ -108,15 +45,6 @@ services:
       retries: 5
       start_period: 10s
 
-# ------------------------------------------------------------------------------------
-# NAMED VOLUMES DEFINITION
-# ------------------------------------------------------------------------------------
-# [FUNCTIONALITY]:
-#   Declares externalized persistent storage volume managed by Docker daemon.
-#
-# [WHY IMPLEMENTED]:
-#   Decouples database physical storage lifecycle from container lifecycle.
-# ------------------------------------------------------------------------------------
 volumes:
-  school_admin_pgdata:
-    name: school_admin_pgdata
+  kalvinet_local_dev_pgdata:
+    name: kalvinet_local_dev_pgdata

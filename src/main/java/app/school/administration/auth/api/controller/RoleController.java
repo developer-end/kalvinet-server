@@ -1,7 +1,8 @@
 package app.school.administration.auth.api.controller;
 
+import app.school.administration.auth.api.request.CreateRoleRequestDTO;
+import app.school.administration.auth.api.response.RoleListItemDTO;
 import app.school.administration.auth.application.serviceimpl.RoleServiceImpl;
-import app.school.administration.auth.infrastructure.persistence.entity.RoleEntity;
 import app.school.administration.auth.infrastructure.persistence.projection.RoleProjectionDTO;
 import app.school.administration.common.utils.AppCommonEndPoint;
 import app.school.administration.common.utils.AppModuleApi;
@@ -16,11 +17,12 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
 import java.util.UUID;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping(AppModuleApi.ROLE)
+@RequestMapping({AppModuleApi.ROLE, AppModuleApi.ROLE_LEGACY})
 public class RoleController {
 
     private final RoleServiceImpl roleService;
@@ -30,18 +32,18 @@ public class RoleController {
         return ResponseEntity.ok(roleService.findByIdProjection(uuid));
     }
 
-    @PostMapping(AppCommonEndPoint.CREATE)
-    public ResponseEntity<RoleEntity> create(@Validated @RequestBody RoleEntity roleEntity) {
-        return ResponseEntity.ok(roleService.save(roleEntity));
+    @GetMapping(AppCommonEndPoint.LIST)
+    public ResponseEntity<List<RoleListItemDTO>> list() {
+        return ResponseEntity.ok(roleService.listRolesForCurrentUser());
     }
 
-    @PutMapping(AppCommonEndPoint.UPDATE)
-    public ResponseEntity<RoleEntity> update(@Validated @RequestBody RoleEntity roleEntity) {
-        return ResponseEntity.ok(roleService.save(roleEntity));
+    @PostMapping(AppCommonEndPoint.CREATE)
+    public ResponseEntity<RoleListItemDTO> create(@Validated @RequestBody CreateRoleRequestDTO request) {
+        return ResponseEntity.ok(roleService.createRole(request));
     }
 
     @PutMapping(AppCommonEndPoint.DE_ACTIVATE)
-    public ResponseEntity<RoleEntity> deActivate(@PathVariable(name = "uuid") UUID uuid) {
+    public ResponseEntity<?> deActivate(@PathVariable(name = "uuid") UUID uuid) {
         return ResponseEntity.ok(roleService.deActivate(uuid));
     }
 

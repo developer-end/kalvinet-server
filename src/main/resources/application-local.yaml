@@ -1,19 +1,23 @@
 # ====================================================================================
 # ENVIRONMENT PROFILE CONFIGURATION: application-local.yaml
 # ====================================================================================
-# [FUNCTIONALITY]:
-#   Specifies local database connection parameters (driver class, JDBC connection URL, username, password)
-#   and Google OAuth2 Client configurations for the 'local' Spring active profile.
+# Local profile datasource — must match docker-compose.yml / .env.example defaults:
 #
-# [USAGE]:
-#   Set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET environment variables or update the fields below.
+#   Host      : localhost
+#   Port      : 5454
+#   Database  : kalvinet-local-dev
+#   User      : postgres
+#   Password  : root
+#   JDBC URL  : jdbc:postgresql://localhost:5454/kalvinet-local-dev
+#
+# Override via environment variables or a root `.env` file used by Docker Compose.
 # ====================================================================================
 spring:
   datasource:
     driver-class-name: org.postgresql.Driver
-    url: jdbc:postgresql://localhost:5454/kalvinet-local-dev
-    username: postgres
-    password: root
+    url: jdbc:postgresql://localhost:${POSTGRES_PORT:5454}/${POSTGRES_DB:kalvinet-local-dev}
+    username: ${POSTGRES_USER:postgres}
+    password: ${POSTGRES_PASSWORD:root}
 
   jpa:
     hibernate:

@@ -40,4 +40,10 @@ public class RoleEntity extends AuditableBaseEntity {
     protected RoleEntity() {
     }
 
+    public RoleEntity(String roleCode, String roleName, String description) {
+        this.roleCode = roleCode;
+        this.roleName = roleName;
+        this.description = description;
+    }
+
 }

@@ -42,7 +42,7 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
         String baseUrl = resolveFrontendBaseUrl(request);
 
         String redirectUrl = UriComponentsBuilder.fromHttpUrl(baseUrl)
-                .path("/login")
+                .path("/signin")
                 .queryParam("oauth_success", "true")
                 .queryParam("email", email != null ? email : "")
                 .queryParam("name", name != null ? name : "")

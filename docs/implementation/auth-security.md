@@ -4,7 +4,7 @@
 
 | Concern | Path |
 |---|---|
-| Filter chain / CORS / OAuth2 login | `common/config/security/SecurityConfig.java` |
+| Filter chain / CORS / OAuth2 client | `common/config/security/SecurityConfig.java` |
 | Public path prefixes | `auth/application/constant/AuthConstant.java` |
 | Sign in / sign up | `auth/api/controller/AuthController.java`, `auth/application/serviceimpl/AuthServiceImpl.java` |
 | JWT create/parse | `common/application/serviceimpl/JWTService.java` |
@@ -28,8 +28,8 @@ Tokens: HS256 access + refresh JWTs from `JWTService`. Claims include username (
 ## Google OAuth2 (current behavior)
 
 1. Client opens `GET /erp/oauth2/authorization/google`
-2. Spring OAuth2 Client completes Google login → `/erp/login/oauth2/code/google`
-3. `OAuth2SuccessHandler` redirects to `{security.oauth2.frontend-url}/login?oauth_success=true&email=&name=`
+2. Spring OAuth2 Client completes Google sign-in → `/erp/login/oauth2/code/google` (Spring Security default path; do not rename)
+3. `OAuth2SuccessHandler` redirects to `{security.oauth2.frontend-url}/signin?oauth_success=true&email=&name=`
 4. **No JWT is issued** and account linking via `OAuthAccountEntity` is not completed in the success handler
 
 Client config: `application-local.yaml` → `spring.security.oauth2.client.registration.google`

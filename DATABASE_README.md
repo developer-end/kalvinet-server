@@ -283,28 +283,28 @@ docker compose down -v
 
 | Component | Setting / Parameter | Technical Rationale & Impact |
 | :--- | :--- | :--- |
-| **Image** | `postgres:16-alpine` | Minimal vulnerability footprint (~40MB base image) with standard support for PostgreSQL extensions (`pgcrypto` and `citext`). |
-| **Container Name** | `school-admin-postgres` | Standardized naming for local container management (`docker exec`, `docker logs`). |
-| **Restart Policy** | `restart: unless-stopped` | Auto-restarts container if PostgreSQL crashes or host reboots, avoiding manual restarts. |
-| **Database Name** | `POSTGRES_DB: school-admin` | Matches default database configured in `application-local.yaml` (`jdbc:postgresql://localhost:5432/school-admin`). |
-| **Credentials** | `POSTGRES_USER: postgres`<br>`POSTGRES_PASSWORD: root` | Pre-configured credentials matching local development profile. Configurable via `.env` file override. |
-| **Port Binding** | `5432:5432` | Binds container port 5432 to host port 5432. Enables native Spring Boot server (`http://localhost:8081/erp`) to connect to `localhost:5432`. |
-| **Data Volume** | `school_admin_pgdata:/var/lib/postgresql/data` | Named volume persistence ensures database tables, master schemas, Flyway version history, and tenant schemas persist across container restarts. |
-| **Healthcheck** | `pg_isready -U postgres -d school-admin` | Checks database socket readiness every 5s before allowing dependent services or Flyway migrations to execute. |
+| **Image** | `postgres:16-alpine` | Minimal vulnerability footprint with `pgcrypto` / `citext` support. |
+| **Container Name** | `kalvinet-local-dev-db` | Predictable name for `docker exec` / `docker logs`. |
+| **Restart Policy** | `restart: unless-stopped` | Auto-restarts after crash or host reboot. |
+| **Database Name** | `POSTGRES_DB: kalvinet-local-dev` | Matches `application-local.yaml` / `.env.example`. |
+| **Credentials** | `POSTGRES_USER: postgres`<br>`POSTGRES_PASSWORD: root` | Same defaults everywhere; override via `.env`. |
+| **Port Binding** | `5454:5432` | Host **5454** → container 5432 (avoids clash with a native Postgres on 5432). |
+| **Data Volume** | `kalvinet_local_dev_pgdata` | Persists data across `docker compose down` (use `-v` to wipe). |
+| **Healthcheck** | `pg_isready -U postgres -d kalvinet-local-dev` | Readiness every 5s before Flyway / Spring Boot. |
 
 ---
 
 ### Spring Boot Native Connectivity (`application-local.yaml`)
 
-When running Spring Boot natively, ensure `application.yaml` has active profile set to `local` (or run with `-Dspring.profiles.active=local`). Connection credentials are loaded from [application-local.yaml](file:///d:/projects-com/administration/src/main/resources/application-local.yaml):
+When running Spring Boot natively, ensure active profile is `local`. Credentials match Docker Compose:
 
 ```yaml
 spring:
   datasource:
     driver-class-name: org.postgresql.Driver
-    url: jdbc:postgresql://localhost:5432/school-admin
+    url: jdbc:postgresql://localhost:5454/kalvinet-local-dev
     username: postgres
     password: root
 ```
 
-Flyway auto-migrations ([MasterFlywayConfig.java](file:///d:/projects-com/administration/src/main/java/app/school/administration/common/config/flyway/MasterFlywayConfig.java)) automatically execute on application boot, installing `pgcrypto` and `citext` extensions, creating the `master` schema, creating core tables, and seeding standard user roles.
+Flyway migrations (`MasterFlywayConfig`) run on boot against the **`public`** schema (`db/migration/public` V1–V5).

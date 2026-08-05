@@ -19,7 +19,11 @@ Database: [`DATABASE_README.md`](DATABASE_README.md)
 |---|---|---|
 | Overall server / what’s implemented | `docs/APPLICATION.md` | **Update whenever functionality changes** |
 | Sign in / sign up API | `auth/api/controller/AuthController.java` + `auth/application/serviceimpl/AuthServiceImpl.java` | Paths via `AppAuthEndPoints` |
-| Auth path constants | `common/utils/AppAuthEndPoints.java`, `common/utils/AppModuleApi.java` | Role module path is `/rloe` (typo) |
+| Auth path constants | `common/utils/AppAuthEndPoints.java`, `common/utils/AppModuleApi.java` | Role catalog: `/api/v1/role` (+ legacy `/rloe`) |
+| Role assignment policy | `auth/application/constant/RoleAssignmentPolicy.java` | Single matrix for assignableRoles + assignRole |
+| Assign role / search users | `auth/api/controller/UserController.java` + `UserServiceImpl` | `/assignableRoles`, `/assignRole/{uuid}`, `/search` |
+| Role assignment audit | `auth/infrastructure/persistence/entity/RoleAssignmentAuditEntity.java` | Flyway V4 table |
+| Public schema Flyway | `common/config/flyway/MasterFlywayConfig.java` + `db/migration/public/` | **V4** role catalog · **V5** assignment audit |
 | Public vs authenticated routes | `auth/application/constant/AuthConstant.java` + `common/config/security/SecurityConfig.java` | |
 | JWT issue / validate | `common/application/serviceimpl/JWTService.java` | HS256; props in `application.yaml` → `security.jwt.*` |
 | JWT request filter | `common/application/component/JWTAuthFilter.java` | |
@@ -62,7 +66,10 @@ Paths above are under `src/main/java/app/school/administration/` unless noted.
 | Intent | Method + path |
 |---|---|
 | Sign in | `POST /api/v1/auth/signIn` |
-| Sign up | `POST /api/v1/auth/signUp` |
+| Sign up (forces USER) | `POST /api/v1/auth/signUp` |
+| Assignable roles | `GET /api/v1/user/assignableRoles` |
+| Assign role | `POST /api/v1/user/assignRole/{uuid}` |
+| Search users | `GET /api/v1/user/search?q=` |
 | Google OAuth start | `GET /oauth2/authorization/google` |
 | Dashboard config | `GET /api/v1/dashboard/config` |
 | Health | `GET /api/health` |

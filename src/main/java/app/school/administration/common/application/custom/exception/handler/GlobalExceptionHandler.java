@@ -220,7 +220,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(value = IllegalArgumentException.class)
     private ResponseEntity<AppResponse> illegalArgumentExceptionHandler(IllegalArgumentException exception, HttpServletRequest httpServletRequest) {
-        return buildResponse(HttpStatus.INTERNAL_SERVER_ERROR, exception, httpServletRequest);
+        return buildResponse(HttpStatus.BAD_REQUEST, exception, httpServletRequest);
     }
 
     @ExceptionHandler(value = InvalidDataAccessApiUsageException.class)

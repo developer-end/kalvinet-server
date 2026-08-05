@@ -117,14 +117,7 @@ CREATE TABLE public.role_table
 );
 CREATE INDEX idx_role_table_active ON public.role_table (is_active);
 
-INSERT INTO public.role_table (role_code, role_name, version)
-VALUES ('ROLE_SUPER_ADMIN', 'Super Administrator', 1),
-       ('ROLE_ADMIN', 'Administrator', 1),
-       ('ROLE_TEACHER', 'Teacher', 1),
-       ('ROLE_STUDENT', 'Student', 1),
-       ('ROLE_ACCOUNTANT', 'Accountant', 1),
-       ('ROLE_USER', 'User', 1)
-;
+-- System role seed data lives in V4__system_role_catalog.sql (fresh-install source of truth).
 
 -- ------------------------------------------------------------------------------------
 -- TABLE 4: master.user_roles

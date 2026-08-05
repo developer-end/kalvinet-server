@@ -12,22 +12,22 @@
 ## 1. Overview & Dual-Authentication Architecture
 
 This specification documents the enterprise authentication subsystem for `kalvi-net-server`. It supports **Dual Authentication**:
-1. **Username / Email + Password Login** (`POST /api/auth/login`)
-2. **Google OAuth2 Login** (`/oauth2/authorization/google`)
+1. **Username / Email + Password Sign-In** (`POST /api/v1/auth/signIn`)
+2. **Google OAuth2 Sign-In** (`/oauth2/authorization/google`)
 
 ### Dual Authentication & Account Linking Flow
 
-To guarantee that users can **always fall back to traditional username/password authentication** if Google login fails (or vice versa), the system implements automatic **Account Linking**:
+To guarantee that users can **always fall back to traditional username/password authentication** if Google sign-in fails (or vice versa), the system implements automatic **Account Linking**:
 
 ```
                                   ┌───────────────────────────┐
-                                  │   User Login Attempt      │
+                                  │   User Sign-In Attempt      │
                                   └─────────────┬─────────────┘
                                                 │
                      ┌──────────────────────────┴──────────────────────────┐
                      ▼                                                     ▼
-      [ Traditional Credentials ]                                [ Google OAuth2 Login ]
-      POST /api/auth/login                                       GET /oauth2/authorization/google
+      [ Traditional Credentials ]                                [ Google OAuth2 Sign-In ]
+      POST /api/v1/auth/signIn                                       GET /oauth2/authorization/google
                      │                                                     │
                      ▼                                                     ▼
       Validate Username + BCrypt Password                     Verify Google ID Token Claims
@@ -47,7 +47,7 @@ To guarantee that users can **always fall back to traditional username/password 
          ┌──────────────┴──────────────┐                 ┌──────────────┴──────────────┐
          ▼                             ▼                 ▼                             ▼
   (Password User)             (Google Linked)    Create UserEntity               Create OAuthAccount
-  Link google_id +             Update last_login Set provider=GOOGLE             Assign ROLE_STUDENT
+  Link google_id +             Update last_sign_in Set provider=GOOGLE             Assign ROLE_STUDENT
   Keep BCrypt Password!        & picture_url     Generate BCrypt fallback pass!  Save to DB
          │                             │                 │                             │
          └──────────────┬──────────────┴─────────────────┴─────────────────────────────┘
@@ -59,7 +59,7 @@ To guarantee that users can **always fall back to traditional username/password 
 #### Key Rules for Dual Authentication:
 1. **Password Preservation**: When a user registers via traditional username/password, their BCrypt password hash is stored in `user_table.password`. If they later log in using Google with the same email address, the backend updates `user_table.google_id` and attaches an `OAuthAccountEntity`, but **NEVER erases or overwrites their existing password hash**.
 2. **Fallback Availability**: Because the password hash remains untouched, the user can log in using **either** Google OAuth2 or their traditional username/password at any time.
-3. **Google-First User Fallback**: When a user registers via Google first, a secure random BCrypt password hash is assigned. The user can optionally trigger "Forgot Password" or "Set Password" in their profile to set a local password, enabling dual login.
+3. **Google-First User Fallback**: When a user registers via Google first, a secure random BCrypt password hash is assigned. The user can optionally trigger "Forgot Password" or "Set Password" in their profile to set a local password, enabling dual sign-in.
 
 ---
 
@@ -76,7 +76,7 @@ ALTER TABLE master.user_table
     ADD COLUMN IF NOT EXISTS provider VARCHAR(50) DEFAULT 'LOCAL',
     ADD COLUMN IF NOT EXISTS email_verified BOOLEAN DEFAULT FALSE,
     ADD COLUMN IF NOT EXISTS picture_url VARCHAR(512),
-    ADD COLUMN IF NOT EXISTS last_login TIMESTAMP WITH TIME ZONE;
+    ADD COLUMN IF NOT EXISTS last_sign_in TIMESTAMP WITH TIME ZONE;
 
 CREATE INDEX IF NOT EXISTS idx_user_google_id ON master.user_table(google_id);
 
@@ -174,9 +174,9 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
         UserEntity user;
         if (userOptional.isPresent()) {
-            // Account Linking Path: Preserve existing BCrypt password so user can login with either method!
+            // Account Linking Path: Preserve existing BCrypt password so user can sign in with either method!
             user = userOptional.get();
-            user.setLastLogin(Instant.now());
+            user.setLastSignIn(Instant.now());
             if (user.getGoogleId() == null) {
                 user.setGoogleId(googleId);
             }
@@ -195,7 +195,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
             user.setProvider(AuthProvider.GOOGLE);
             user.setEmailVerified(Boolean.TRUE.equals(emailVerified));
             user.setPictureUrl(picture);
-            user.setLastLogin(Instant.now());
+            user.setLastSignIn(Instant.now());
 
             RoleEntity studentRole = roleRepository.findByName("ROLE_STUDENT")
                     .orElseThrow(() -> new IllegalStateException("Default ROLE_STUDENT not found"));

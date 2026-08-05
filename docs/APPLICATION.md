@@ -14,7 +14,7 @@ Database detail: [`DATABASE_README.md`](../DATABASE_README.md)
 
 ## 1. Purpose
 
-KalviNet Server is the **multi-tenant school & institution management API**. It authenticates users (password JWT + Google OAuth2 login), manages identity/catalog data (users, roles, schools, tenants), and exposes ERP endpoints under a shared servlet context for the Angular web client.
+KalviNet Server is the **multi-tenant school & institution management API**. It authenticates users (unified password JWT + Google OAuth2 sign-in), forces new accounts onto `ROLE_USER`, and exposes authenticated role-assignment APIs with a server-enforced permission matrix.
 
 Base URL (local): `http://localhost:8081/erp`
 
@@ -28,7 +28,7 @@ Base URL (local): `http://localhost:8081/erp`
 | API | Spring Web MVC, Validation, springdoc-openapi **2.8.5** |
 | Security | Spring Security (stateless), OAuth2 Client (Google), JJWT **0.11.5** (HS256) |
 | Persistence | Spring Data JPA / Hibernate, PostgreSQL, Flyway (custom multi-schema) |
-| Cache | Spring Cache + Caffeine |
+| Cache | Spring Cache + Caffeine (`auth_cache`) |
 | Realtime | Raw WebSocket (`/ws`) |
 | Build | Maven (`mvnw` / `mvnw.cmd`) |
 
@@ -58,14 +58,12 @@ Root package: `app.school.administration`
 ```
 app.school.administration/
 ├── KalviNetApplication.java
-├── auth/          # identity, JWT login, OAuth accounts, users/roles/tenants, TenantContext
+├── auth/          # identity, JWT sign-in, OAuth accounts, users/roles/tenants, role assignment
 ├── common/        # security, JWT filter, Flyway, cache, WebSocket, health, base CRUD
 ├── dashboard/     # dashboard config API
 └── modules/
     └── school/    # first feature module (school CRUD)
 ```
-
-Layering (per module): `api` → `application` → `domain` → `infrastructure` / `persistance`
 
 ---
 
@@ -75,54 +73,58 @@ Layering (per module): `api` → `application` → `domain` → `infrastructure`
 
 | Capability | Status |
 |---|---|
-| Sign in (username/password → access + refresh JWT) | Implemented (`POST /signIn`) |
-| Sign up | Implemented (`POST /signUp`) |
-| Sign out | **Gap** — constant exists; no controller method |
-| Refresh token endpoint | **Gap** — constant exists; no controller method |
-| Password hashing (BCrypt) | Implemented (sign-in also has plaintext equality fallback — see gaps) |
-| Google OAuth2 redirect login | Partial — Spring OAuth2 login wired; success handler redirects to frontend **without issuing JWT** |
-| OAuth account CRUD | Implemented (`/api/v1/oAuth`) — currently **public** |
+| Unified sign in (username/password → JWTs; **no portal role required**) | Implemented (`POST /signIn`) |
+| Sign up → **always** `ROLE_USER` (ignores client role field) | Implemented (`POST /signUp`) |
+| Sign out / refresh endpoints | **Gap** — constants only |
+| Google OAuth2 redirect sign-in | Partial — success handler redirects without issuing JWT |
+| OAuth account CRUD | Implemented (`/api/v1/oAuth`) — still **public** (pre-existing) |
 
-OAuth entry: `GET /erp/oauth2/authorization/google`  
-Callback: `/erp/login/oauth2/code/google`  
-Success redirect: `{frontend-url}/login?oauth_success=true&email=&name=`
+### 5.2 Role assignment (authenticated)
 
-### 5.2 Identity catalog
+| Endpoint | Behavior |
+|---|---|
+| `GET /api/v1/user/assignableRoles` | Roles the caller may grant from **DB catalog** (`RoleAssignmentPolicy`); never includes `ROLE_IT` |
+| `POST /api/v1/user/assignRole/{uuid}` | Soft-deactivates prior mappings, activates/creates target role; writes `role_assignment_audit`; evicts `auth_cache` |
+| `GET /api/v1/user/search?q=&page=&size=` | Paginated user search for Role Assignment UI (**unscoped** — tenant routing not wired) |
+| `GET /api/v1/role/list` | IT-only — list active roles |
+| `POST /api/v1/role/create` | IT-only — register institutional role (not baseline) |
 
-| Resource | Base path | Operations | Notes |
-|---|---|---|---|
-| User | `/api/v1/user` | findById, create, update, deActivate (+ role mapping deActivate) | |
-| Role | `/api/v1/rloe` | same CRUD pattern | **Typo in path** (`rloe` not `role`) |
-| Tenant | `/api/v1/tenant` | findById, create, update, deActivate | Create triggers tenant Flyway migrate |
-| School | `/api/v1/school` | same CRUD pattern | First ERP feature module |
-| OAuth account | `/api/v1/oAuth` | same CRUD pattern | |
+### Assignable matrix (vs catalog)
 
-Shared subpaths: `/findById/{uuid}`, `/create`, `/update`, `/deActivate/{uuid}` (`AppCommonEndPoint`).
+Baseline seed: `USER`, `OWNER`, `MANAGER`, `MANAGEMENT`, `IT`. Additional roles exist only after IT registers them.
 
-### 5.3 Dashboard — `/api/v1/dashboard`
+| Caller | May assign |
+|---|---|
+| `ROLE_IT` | Any catalog role except `ROLE_IT` |
+| `ROLE_MANAGER` | Catalog except `IT`, `OWNER`, `MANAGER`, `USER` |
+| `ROLE_MANAGEMENT` / `ROLE_TEACHER` | Non-baseline institutional roles only |
+| Others | none |
+
+`ROLE_IT` is never assignable via API. Authorization uses DB-loaded authorities (JWT proves identity; `auth_cache` evicted on assign).
+
+### 5.3 Identity catalog
+
+| Resource | Base path | Notes |
+|---|---|---|
+| User | `/api/v1/user` | CRUD + search + assignRole + assignableRoles |
+| Role | `/api/v1/role` (+ legacy `/api/v1/rloe`) | Catalog CRUD |
+| Tenant / School / OAuth | existing paths | Unchanged |
+
+### 5.4 Dashboard / health / WS
+
+Unchanged: `GET /api/v1/dashboard/config`, `GET /api/health`, `DELETE /api/requests/{id}/cancel`, `WS /ws`.
+
+### 5.5 Database & roles
 
 | Capability | Status |
 |---|---|
-| `GET /config` | Implemented — mostly hardcoded metrics + `userRepository.count()` |
-
-### 5.4 Cross-cutting APIs
-
-| Endpoint | Status |
-|---|---|
-| `GET /api/health` | Implemented |
-| `DELETE /api/requests/{requestId}/cancel` | Implemented (cancellable task registry) |
-| `WS /ws` | Implemented — sends one CONNECTED JSON message on open |
-
-### 5.5 Database & tenancy
-
-| Capability | Status |
-|---|---|
-| Public schema Flyway (`db/migration/public`) | Implemented via `MasterFlywayConfig` |
-| Extensions `pgcrypto`, `citext` | Implemented (V1) |
-| Tables: user, oauth_accounts, role, user_roles, school, tenant | Implemented (V2–V3) |
-| Tenant schema provisioning on tenant create | Partial — schema migrate path exists; **no tenant SQL scripts** |
-| Runtime `TenantContext.setTenant` from JWT / `X-Tenant-ID` | **Gap** — setter never called |
-| Hibernate `multiTenancy: SCHEMA` | Configured |
+| Public Flyway V1–V3 | Implemented (tables; role seed deferred to V4) |
+| **V4** — baseline roles only: USER, OWNER, MANAGER, MANAGEMENT, IT | Implemented |
+| Role Registry API (`/role/list`, `/role/create`) — IT only | Implemented |
+| **V5** — `role_assignment_audit` (`V5__role_assignment_audit.sql`) | Implemented |
+| Existing / seeded roles | SUPER_ADMIN, ADMIN, USER, STUDENT, TEACHER, STAFF, ACCOUNTANT, MANAGER, MANAGEMENT, OWNER, IT |
+| Tenant schema SQL | Still empty |
+| `TenantContext.setTenant` at request time | Still **not wired** (accepted temporary gap for user search) |
 
 ---
 
@@ -130,80 +132,45 @@ Shared subpaths: `/findById/{uuid}`, `/create`, `/update`, `/deActivate/{uuid}` 
 
 | Piece | Behavior |
 |---|---|
-| `SecurityConfig` | CSRF off, STATELESS, CORS, OAuth2 login + `OAuth2SuccessHandler`, JWT filter before username/password filter |
-| `AuthConstant.PUBLIC_ENDPOINTS` | auth, oAuth, school, tenant, dashboard, ws, swagger, requests, health — **permitAll** |
-| `JWTAuthFilter` | Bearer → validate → `CustomUserDetails` + `AppContextService.createAuthContexts` (user id only today) |
-| `JWTService` | Issue/validate HS256 tokens; claims: `sub`=username, `roles` |
-| Entry point | Unauthenticated → HTTP 401 |
-
-Headers allowed by CORS include `Authorization`, `X-Tenant-ID`, `X-Request-Id` (`X-Tenant-ID` not consumed yet).
+| `SecurityConfig` | CSRF off, STATELESS, CORS, OAuth2 + JWT filter |
+| `AuthConstant.PUBLIC_ENDPOINTS` | Unchanged — **do not** add user assign/search/assignableRoles |
+| `JWTAuthFilter` | Bearer → load `CustomUserDetails` from DB (via cache) → SecurityContext |
+| Role change effect | Immediate for **API** auth (cache eviction); client UI may need re-sign-in if JWT claim used for display |
 
 ---
 
-## 7. Core services
+## 7. Core services (additions)
 
 | Service | Responsibility |
 |---|---|
-| `AuthService` / `AuthServiceImpl` | Sign in / sign up |
-| `UserService`, `RoleService`, `TenantService`, `OAuthUserService` | Catalog CRUD |
-| `CustomUserDetailsServiceImpl` | Spring `UserDetailsService` |
-| `JWTService` | Token create/parse |
-| `AppContextService` | ThreadLocal user context create/clear |
-| `TenantMigrationService` | Per-tenant Flyway from `db/migration/tenant` |
-| `AppBaseService` | Shared CRUD helpers for feature services |
-| `CaffeineCacheService` | App cache |
-| `CancellableTaskRegistry` / `CancellableTaskService` | Request cancellation |
-| `DashboardService` | Dashboard config payload |
-| `SchoolService` | School CRUD |
+| `RoleAssignmentPolicy` | Single matrix for assignableRoles + assignRole |
+| `UserServiceImpl.assignRole` / `searchUsers` / `getAssignableRolesForCurrentUser` | Role assignment flows |
+| `RoleAssignmentAuditEntity` | Audit who assigned what, when |
+| `CustomUserDetailsServiceImpl` | DB authorities + `auth_cache` |
 
 ---
 
-## 8. Seeded roles (Flyway V2)
+## 8. Known gaps / stubs (track here)
 
-Typical role codes seeded in `role_table` (see migration): Student, Teacher, Management, Accounts, Owner (and related admin codes as defined in SQL). Align with web client portal slugs: `student`, `teacher`, `management`, `accounts`, `owner`.
-
----
-
-## 9. Known gaps / stubs (track here)
-
-- `TenantContext.setTenant` never called — schema routing incomplete at request time.
-- `db/migration/tenant/` has **no SQL files**; tenant provision creates empty migrations.
-- OAuth success does **not** issue JWT or persist/link `OAuthAccountEntity`.
-- Spec doc `docs/modules/auth/oauth2-google-jwt-architecture.md` describes RS256 + refresh rotation + `master` schema — **aspirational**, not current code.
-- `/signOut` and `/refresh` constants unused.
-- Role API path typo: `/api/v1/rloe`.
-- Package typos: `infrastucture`, `persistance`.
-- Broad `permitAll` on school/tenant/dashboard/oAuth CRUD.
-- Sign-in plaintext password equality fallback.
-- Hardcoded JWT secret in `application.yaml` (move to env for non-local).
-- `.env.example` DB name/port drift vs `docker-compose.yml` / `application-local.yaml`.
-- Dashboard metrics largely hardcoded.
-- `AppContextService` clear primarily on JWT failure — no guaranteed request-complete cleanup filter.
-- DATABASE_README still mentions historical `master` schema; runtime migrations use **`public`**.
+- Tenant scoping still non-functional (`TenantContext.setTenant` unused) — user search is global/public-schema.
+- Client JWT claim can lag UI role display until re-sign-in; server authorization uses DB roles.
+- OAuth success still does not issue JWT.
+- `/signOut` / `/refresh` unused; plaintext password equality fallback remains.
+- Broad `permitAll` on school/tenant/dashboard/oAuth CRUD (pre-existing).
+- Package typos `infrastucture` / `persistance` unchanged.
+- Empty tenant migrations.
 
 ---
 
-## 10. Documentation map
+## 9. Documentation map
 
 | Doc | Role |
 |---|---|
-| **This file** (`docs/APPLICATION.md`) | Overall server + functionality (keep current) |
-| [`README.md`](./README.md) | Documentation hub |
-| [`AGENTS.md`](../AGENTS.md) | Task → exact file paths (universal) |
+| **This file** | Living server overview |
+| [`AGENTS.md`](../AGENTS.md) | Task → files |
 | [`implementation/`](./implementation/) | Deep notes |
-| [`DATABASE_README.md`](../DATABASE_README.md) | DB architecture & connectivity |
-| [`modules/auth/`](./modules/auth/) | OAuth/JWT architecture notes (check vs code) |
-| [`CLAUDE.md`](../CLAUDE.md), [`.github/copilot-instructions.md`](../.github/copilot-instructions.md), [`.cursor/rules/`](../.cursor/rules/) | Optional IDE entrypoints — mirrors, **not** a second source of truth |
+| [`DATABASE_README.md`](../DATABASE_README.md) | DB architecture |
 
-## 11. Maintenance contract (required)
+## 10. Maintenance contract (required)
 
-**Whenever you change code or behavior, update this file in the same change** (any agent / IDE):
-
-1. New/removed/changed **API endpoint** → update §5.
-2. New/changed **security / public paths / JWT / OAuth** → update §5.1 / §6.
-3. New/changed **tenancy or Flyway** → update §5.5 (+ implementation/database docs).
-4. New/changed **service or module** → update §4 / §7.
-5. New stub completed or new gap found → update status tables and §9.
-6. Bump **Last reviewed** date at the top.
-
-Do not leave this file stale. Product truth lives in `docs/` + `AGENTS.md`, not in vendor-only config.
+Update this file on every API/security/Flyway/behavior change; bump **Last reviewed**.

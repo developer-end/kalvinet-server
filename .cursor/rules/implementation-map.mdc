@@ -21,6 +21,8 @@ Before grepping the repo, read `AGENTS.md` and pick the **Task → Edit Here** r
 |---|---|
 | App overview (living) | `docs/APPLICATION.md` |
 | Sign in / sign up | `auth/api/controller/AuthController.java`, `auth/application/serviceimpl/AuthServiceImpl.java` |
+| Role assignment policy | `auth/application/constant/RoleAssignmentPolicy.java` |
+| Assign / search users | `auth/api/controller/UserController.java`, `UserServiceImpl` |
 | Public endpoints | `auth/application/constant/AuthConstant.java` |
 | Security filter chain | `common/config/security/SecurityConfig.java` |
 | JWT | `common/application/serviceimpl/JWTService.java`, `common/application/component/JWTAuthFilter.java` |

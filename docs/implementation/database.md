@@ -19,11 +19,13 @@ Living status / gaps: [`APPLICATION.md`](../APPLICATION.md)
 
 ## Migration layout
 
-| Script area | Contents |
+| Script | Contents |
 |---|---|
 | `public/V1__extentions.sql` | `pgcrypto`, `citext` |
-| `public/V2__user_role_table.sql` | users, oauth_accounts, roles (+ seeds), user_roles |
-| `public/V3__school_tenant_table.sql` | school_table, tenant_table |
+| `public/V2__user_role_table.sql` | `user_table`, `oauth_accounts`, `role_table`, `user_roles` (schema only; no role seed) |
+| `public/V3__school_tenant_table.sql` | `school_table`, `tenant_table` |
+| `public/V4__system_role_catalog.sql` | Baseline seed: USER, OWNER, MANAGER, MANAGEMENT, IT |
+| `public/V5__role_assignment_audit.sql` | `role_assignment_audit` + indexes |
 | `public/R__init.sql` | empty repeatable |
 | `tenant/*` | none yet |
 
@@ -31,12 +33,22 @@ Living status / gaps: [`APPLICATION.md`](../APPLICATION.md)
 
 ## Local database
 
-```bash
-docker-compose up -d postgres
-# jdbc:postgresql://localhost:5454/kalvinet-local-dev  user=postgres password=root
-```
+Canonical values (same in `docker-compose.yml`, `.env.example`, `application-local.yaml`):
 
-Note: `.env.example` defaults (`school-admin`, port `5432`) **do not match** compose / local YAML — prefer compose + `application-local.yaml` until `.env.example` is aligned.
+| Key | Value |
+|---|---|
+| Container | `kalvinet-local-dev-db` |
+| Database | `kalvinet-local-dev` |
+| User / password | `postgres` / `root` |
+| Host port | `5454` → container `5432` |
+| Volume | `kalvinet_local_dev_pgdata` |
+| JDBC | `jdbc:postgresql://localhost:5454/kalvinet-local-dev` |
+
+```bash
+cp .env.example .env          # optional overrides
+docker compose up -d postgres
+docker compose down -v        # wipe for a fresh Flyway migrate
+```
 
 ## Entity notes
 
