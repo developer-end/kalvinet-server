@@ -20,10 +20,6 @@ public interface UserProjectionDTO extends AuditableProjectionDTO {
 
     Set<OAuthAccountProjectionDTO> getOAuthAccounts();
 
-    interface UserRoleProjectionDTO extends AuditableProjectionDTO {
-        RoleProjectionDTO getRole();
-    }
-
     interface OAuthAccountProjectionDTO extends AuditableProjectionDTO {
         String getProvider();
 

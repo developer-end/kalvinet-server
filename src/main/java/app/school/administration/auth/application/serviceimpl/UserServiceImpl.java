@@ -70,6 +70,20 @@ public class UserServiceImpl extends AppBaseService<UserEntity, UUID> implements
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public UserListItemDTO findByIdListItem(UUID id) {
+        CustomUserDetails actor = requireActor();
+        Set<String> callerRoles = actor.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .collect(Collectors.toSet());
+        if (!RoleAssignmentPolicy.canAssignRoles(callerRoles)) {
+            throw new AccessDeniedException("You do not have role assignment privileges");
+        }
+        UserEntity user = appFindById(id);
+        return toListItem(user);
+    }
+
+    @Override
     @Transactional
     public Void userRoleDeActivate(UserRoleId id) {
         UserRoleEntity userRoleEntity = userRoleRepository.findById(id).orElseThrow(NoDataFoundException::new);
@@ -206,6 +220,7 @@ public class UserServiceImpl extends AppBaseService<UserEntity, UUID> implements
 
     private UserListItemDTO toListItem(UserEntity user) {
         List<String> roleCodes = user.getRoles().stream()
+                .filter(UserRoleEntity::isActive)
                 .filter(r -> r.getRole() != null)
                 .map(r -> r.getRole().getRoleCode())
                 .toList();

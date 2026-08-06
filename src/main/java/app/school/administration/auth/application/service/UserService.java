@@ -20,6 +20,8 @@ public interface UserService {
 
     UserProjectionDTO findByIdProjection(UUID uuid);
 
+    UserListItemDTO findByIdListItem(UUID uuid);
+
     Void userRoleDeActivate(UserRoleId id);
 
     UserEntity deActivate(UUID uuid);

@@ -1,11 +1,15 @@
 package app.school.administration.auth.infrastructure.persistence.projection;
 
-import app.school.administration.common.infrastucture.persistence.projection.AuditableProjectionDTO;
+import java.time.Instant;
 
-public interface UserRoleProjectionDTO extends AuditableProjectionDTO {
-
-    UserProjectionDTO getUser();
+/**
+ * Projection for {@code user_roles} rows. Composite PK (user_id + role_id) — no single {@code id} field.
+ */
+public interface UserRoleProjectionDTO {
 
     RoleProjectionDTO getRole();
 
+    Instant getAssignedAt();
+
+    boolean isActive();
 }

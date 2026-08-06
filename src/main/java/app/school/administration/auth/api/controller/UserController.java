@@ -5,7 +5,6 @@ import app.school.administration.auth.api.response.UserListItemDTO;
 import app.school.administration.auth.application.serviceimpl.UserServiceImpl;
 import app.school.administration.auth.infrastructure.persistence.entity.UserEntity;
 import app.school.administration.auth.infrastructure.persistence.entity.embeddable.UserRoleId;
-import app.school.administration.auth.infrastructure.persistence.projection.UserProjectionDTO;
 import app.school.administration.common.utils.AppCommonEndPoint;
 import app.school.administration.common.utils.AppModuleApi;
 import lombok.RequiredArgsConstructor;
@@ -34,8 +33,8 @@ public class UserController {
     private final UserServiceImpl userService;
 
     @GetMapping(AppCommonEndPoint.FIND_BY_ID)
-    public ResponseEntity<UserProjectionDTO> findById(@PathVariable(name = "uuid") UUID uuid) {
-        return ResponseEntity.ok(userService.findByIdProjection(uuid));
+    public ResponseEntity<UserListItemDTO> findById(@PathVariable(name = "uuid") UUID uuid) {
+        return ResponseEntity.ok(userService.findByIdListItem(uuid));
     }
 
     @GetMapping(AppCommonEndPoint.SEARCH)
