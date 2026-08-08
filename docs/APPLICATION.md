@@ -62,7 +62,10 @@ app.school.administration/
 ├── common/        # security, JWT filter, Flyway, cache, WebSocket, health, base CRUD
 ├── dashboard/     # dashboard config API
 └── modules/
-    └── school/    # first feature module (school CRUD)
+    ├── school/         # school profile CRUD + RBAC
+    ├── institution/    # singleton institution settings + schools list
+    ├── event/          # institution/school calendar events
+    └── featureconfig/  # feature enablement + role grants
 ```
 
 ---
@@ -122,6 +125,9 @@ Unchanged: `GET /api/v1/dashboard/config`, `GET /api/health`, `DELETE /api/reque
 | **V4** — baseline roles only: USER, OWNER, MANAGER, MANAGEMENT, IT | Implemented |
 | Role Registry API (`/role/list`, `/role/create`) — IT only | Implemented |
 | **V5** — `role_assignment_audit` (`V5__role_assignment_audit.sql`) | Implemented |
+| **V6** — institution singleton, school columns, events, feature config | Implemented |
+| Institution / school / event / feature-config APIs | Implemented (JWT required; school not public) |
+| `OrgAccessPolicy` + `FeatureAccessService` | Baseline RBAC; config grants restrict further |
 | Existing / seeded roles | SUPER_ADMIN, ADMIN, USER, STUDENT, TEACHER, STAFF, ACCOUNTANT, MANAGER, MANAGEMENT, OWNER, IT |
 | Tenant schema SQL | Still empty |
 | `TenantContext.setTenant` at request time | Still **not wired** (accepted temporary gap for user search) |
@@ -133,7 +139,7 @@ Unchanged: `GET /api/v1/dashboard/config`, `GET /api/health`, `DELETE /api/reque
 | Piece | Behavior |
 |---|---|
 | `SecurityConfig` | CSRF off, STATELESS, CORS, OAuth2 + JWT filter |
-| `AuthConstant.PUBLIC_ENDPOINTS` | Unchanged — **do not** add user assign/search/assignableRoles |
+| `AuthConstant.PUBLIC_ENDPOINTS` | Auth/OAuth/tenant/dashboard/health — **not** school/institution/event |
 | `JWTAuthFilter` | Bearer → load `CustomUserDetails` from DB (via cache) → SecurityContext |
 | Role change effect | Immediate for **API** auth (cache eviction); client UI may need re-sign-in if JWT claim used for display |
 
@@ -144,6 +150,9 @@ Unchanged: `GET /api/v1/dashboard/config`, `GET /api/health`, `DELETE /api/reque
 | Service | Responsibility |
 |---|---|
 | `RoleAssignmentPolicy` | Single matrix for assignableRoles + assignRole |
+| `OrgAccessPolicy` | Baseline institution/school/event/config role matrix |
+| `FeatureAccessService` | Enforce baseline + optional feature role grants |
+| `InstitutionService` / `CalendarEventService` / `SchoolServiceImpl` | Org domain APIs |
 | `UserServiceImpl.assignRole` / `searchUsers` / `getAssignableRolesForCurrentUser` | Role assignment flows |
 | `RoleAssignmentAuditEntity` | Audit who assigned what, when |
 | `CustomUserDetailsServiceImpl` | DB authorities + `auth_cache` |
@@ -156,7 +165,7 @@ Unchanged: `GET /api/v1/dashboard/config`, `GET /api/health`, `DELETE /api/reque
 - Client JWT claim can lag UI role display until re-sign-in; server authorization uses DB roles.
 - OAuth success still does not issue JWT.
 - `/signOut` / `/refresh` unused; plaintext password equality fallback remains.
-- Broad `permitAll` on school/tenant/dashboard/oAuth CRUD (pre-existing).
+- Tenant/dashboard/oAuth CRUD remain broader than ideal (pre-existing).
 - Package typos `infrastucture` / `persistance` unchanged.
 - Empty tenant migrations.
 

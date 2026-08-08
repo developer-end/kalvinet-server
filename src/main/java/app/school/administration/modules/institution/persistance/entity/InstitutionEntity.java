@@ -1,4 +1,4 @@
-package app.school.administration.modules.school.persistance.entity;
+package app.school.administration.modules.institution.persistance.entity;
 
 import app.school.administration.common.infrastucture.persistence.entity.AuditableBaseEntity;
 import jakarta.persistence.Column;
@@ -8,14 +8,12 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Index;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
 import org.hibernate.annotations.UuidGenerator;
 
-import java.time.Instant;
 import java.util.UUID;
 
 @Getter
@@ -23,29 +21,29 @@ import java.util.UUID;
 @Entity
 @DynamicUpdate
 @DynamicInsert
-@Table(name = "school_table", schema = "public",
-        indexes = {
-                @Index(name = "idx_school_table_active", columnList = "is_active"),
-                @Index(name = "idx_school_institution", columnList = "institution_id")
-        })
-public class SchoolEntity extends AuditableBaseEntity {
+@Table(name = "institution_table", schema = "public",
+        indexes = {@Index(name = "idx_institution_table_active", columnList = "is_active")})
+public class InstitutionEntity extends AuditableBaseEntity {
 
     @Id
     @GeneratedValue
     @UuidGenerator
-    @Column(name = "school_id", nullable = false, updatable = false, unique = true)
+    @Column(name = "institution_id", nullable = false, updatable = false, unique = true)
     private UUID id;
 
-    @NotNull
-    @Column(name = "institution_id", nullable = false)
-    private UUID institutionId;
+    /** Enforces a single catalog row (always 1). */
+    @Column(name = "singleton_key", nullable = false, unique = true)
+    private short singletonKey = 1;
 
     @NotBlank
-    @Column(name = "school_name", nullable = false, unique = true)
-    private String schoolName;
+    @Column(name = "institution_name", nullable = false)
+    private String institutionName;
 
-    @Column(name = "school_code")
-    private String schoolCode;
+    @Column(name = "legal_name")
+    private String legalName;
+
+    @Column(name = "registration_number")
+    private String registrationNumber;
 
     @Column(name = "email")
     private String email;
@@ -71,21 +69,15 @@ public class SchoolEntity extends AuditableBaseEntity {
     @Column(name = "postal_code")
     private String postalCode;
 
-    @Column(name = "principal_name")
-    private String principalName;
+    @Column(name = "website")
+    private String website;
 
-    @Column(name = "board_affiliation")
-    private String boardAffiliation;
-
-    @Column(name = "started_date")
-    private Instant startedDate;
-
-    @Column(name = "timezone")
-    private String timezone;
+    @Column(name = "logo_url")
+    private String logoUrl;
 
     @Column(name = "description")
     private String description;
 
-    public SchoolEntity() {
+    protected InstitutionEntity() {
     }
 }
